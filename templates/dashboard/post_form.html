@@ -1,0 +1,113 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}{{ action }} Post — MARLO Dashboard{% endblock %}
+{% block topbar_title %}{{ action }} Post{% endblock %}
+
+{% block content %}
+<div class="dash-section">
+  <div class="section-header">
+    <h1 class="dash-heading">{{ action }} Post</h1>
+    <a href="{% url 'dashboard_post_list' %}" class="btn btn-outline">← Back to posts</a>
+  </div>
+
+  <div class="post-form-grid">
+    <!-- Main form -->
+    <div class="form-card">
+      <form method="post" enctype="multipart/form-data" novalidate id="post-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" name="title"
+            class="form-control form-title-input {% if post_form.title.errors %}is-invalid{% endif %}"
+            value="{{ post_form.title.value|default:'' }}"
+            placeholder="Post title..." />
+          {% if post_form.title.errors %}
+            <span class="form-error">{{ post_form.title.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Content *</label>
+          <textarea name="content"
+            class="form-control post-editor {% if post_form.content.errors %}is-invalid{% endif %}"
+            rows="18"
+            placeholder="Write your post content here...">{{ post_form.content.value|default:'' }}</textarea>
+          {% if post_form.content.errors %}
+            <span class="form-error">{{ post_form.content.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Attachments -->
+        <div class="form-group">
+          <label class="form-label">Upload attachments</label>
+          <input type="file" name="attachments" class="form-control" multiple accept="image/*,.pdf,.doc,.docx,.zip" />
+          <span class="form-hint">Max 20 MB per file. Multiple files supported.</span>
+        </div>
+
+        {% if post and post.attachments.all %}
+          <div class="existing-attachments">
+            <label class="form-label">Current attachments</label>
+            <ul class="attachment-list">
+              {% for att in post.attachments.all %}
+                <li class="attachment-item attachment-item-dash">
+                  <a href="{{ att.file.url }}" target="_blank">{{ att.file_name }}</a>
+                  <form method="post" action="{% url 'dashboard_attachment_delete' att.pk %}" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-link-danger"
+                      onclick="return confirm('Remove this attachment?')">Remove</button>
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">{{ action }} post</button>
+          <a href="{% url 'dashboard_post_list' %}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Sidebar options -->
+    <div>
+      <div class="form-card sidebar-form-card">
+        <h3 class="card-title">Publish settings</h3>
+
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" form="post-form" class="form-control">
+            {% for value, label in post_form.fields.status.choices %}
+              <option value="{{ value }}"
+                {% if post_form.status.value == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cover image</label>
+          <input type="file" name="cover_image" form="post-form" class="form-control" accept="image/*" />
+          {% if post and post.cover_image %}
+            <div class="current-cover">
+              <img src="{{ post.cover_image.url }}" alt="Current cover" />
+              <span class="form-hint">Upload a new image to replace.</span>
+            </div>
+          {% endif %}
+        </div>
+
+        {% if post %}
+          <div class="post-meta-info">
+            <p><span class="meta-label">Slug:</span> <code>{{ post.slug }}</code></p>
+            <p><span class="meta-label">Reads:</span> {{ post.read_count }}</p>
+            <p><span class="meta-label">Likes:</span> {{ post.like_count }}</p>
+            <p><span class="meta-label">Created:</span> {{ post.created_at|date:"M d, Y" }}</p>
+          </div>
+          <a href="{% url 'post_detail' post.slug %}" target="_blank" class="btn btn-outline btn-block">
+            Preview post →
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

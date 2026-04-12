@@ -1,0 +1,76 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Posts — MARLO Dashboard{% endblock %}
+{% block topbar_title %}Posts{% endblock %}
+
+{% block content %}
+<div class="dash-section">
+  <div class="section-header">
+    <h1 class="dash-heading">Posts</h1>
+    <a href="{% url 'dashboard_post_create' %}" class="btn btn-primary">+ New post</a>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Status</th>
+          <th>Reads</th>
+          <th>Likes</th>
+          <th>Comments</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in page_obj %}
+          <tr>
+            <td>
+              <a href="{% url 'post_detail' post.slug %}" target="_blank" class="table-link">
+                {{ post.title|truncatechars:50 }}
+              </a>
+            </td>
+            <td class="text-muted">{{ post.author.username }}</td>
+            <td>
+              {% if post.status == 'published' %}
+                <span class="badge badge-active">Published</span>
+              {% else %}
+                <span class="badge badge-draft">Draft</span>
+              {% endif %}
+            </td>
+            <td>{{ post.read_count }}</td>
+            <td>{{ post.like_count }}</td>
+            <td>{{ post.comment_count }}</td>
+            <td class="text-muted">{{ post.created_at|date:"M d, Y" }}</td>
+            <td>
+              <div class="action-btns">
+                <a href="{% url 'dashboard_post_edit' post.pk %}" class="btn-action btn-action-edit">Edit</a>
+                <form method="post" action="{% url 'dashboard_post_delete' post.pk %}"
+                      onsubmit="return confirm('Delete this post? This cannot be undone.')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-action btn-action-delete">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8" class="empty-row">No posts yet. <a href="{% url 'dashboard_post_create' %}">Create the first one.</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav class="pagination-nav">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
+      {% endif %}
+      <span class="page-info">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="page-btn">Next →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

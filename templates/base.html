@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}MARLO CMS{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="{% url 'post_list' %}" class="navbar-brand">MARLO</a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="{% url 'post_list' %}" class="nav-link {% if request.resolver_match.url_name == 'post_list' %}active{% endif %}">Blog</a></li>
+        <li><a href="{% url 'about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
+
+        {% if user.is_authenticated %}
+          {% if user.is_admin_role %}
+            <li><a href="{% url 'dashboard_home' %}" class="nav-link">Dashboard</a></li>
+          {% endif %}
+          <li><a href="{% url 'profile' %}" class="nav-link">{{ user.username }}</a></li>
+          <li>
+            <form method="post" action="{% url 'logout' %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-sm">Logout</button>
+            </form>
+          </li>
+        {% else %}
+          <li><a href="{% url 'login' %}" class="btn btn-outline-sm">Login</a></li>
+          <li><a href="{% url 'register' %}" class="btn btn-primary-sm">Register</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Flash messages -->
+  {% if messages %}
+    <div class="messages-container container">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+          {{ message }}
+          <button class="alert-close" onclick="this.parentElement.remove()">&#x2715;</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Main content -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>&copy; {% now "Y" %} MARLO CMS. Built with Django.</span>
+      <div class="footer-links">
+        <a href="{% url 'post_list' %}">Blog</a>
+        <a href="{% url 'about' %}">About</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JWT token for JS fetch calls — only rendered when user is logged in -->
+  {% if user.is_authenticated and jwt_token %}
+    <script>
+      window.MARLO = {
+        jwtToken: "{{ jwt_token }}",
+        userId: {{ user.pk }},
+        csrfToken: "{{ csrf_token }}"
+      };
+    </script>
+  {% else %}
+    <script>window.MARLO = { jwtToken: null, csrfToken: "{{ csrf_token }}" };</script>
+  {% endif %}
+
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

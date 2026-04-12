@@ -1,0 +1,67 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Users — MARLO Dashboard{% endblock %}
+{% block topbar_title %}Users{% endblock %}
+
+{% block content %}
+<div class="dash-section">
+  <div class="section-header">
+    <h1 class="dash-heading">Users</h1>
+    <a href="{% url 'dashboard_user_create' %}" class="btn btn-primary">+ New user</a>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>
+              <div class="table-user-cell">
+                {% if u.avatar %}
+                  <img src="{{ u.avatar.url }}" alt="{{ u.username }}" class="table-avatar" />
+                {% else %}
+                  <div class="table-avatar-placeholder">{{ u.username|first|upper }}</div>
+                {% endif %}
+                <span>{{ u.get_full_name|default:u.username }}</span>
+              </div>
+            </td>
+            <td class="text-muted">{{ u.email }}</td>
+            <td><span class="badge badge-{{ u.role }}">{{ u.get_role_display }}</span></td>
+            <td>
+              {% if u.is_active %}
+                <span class="badge badge-active">Active</span>
+              {% else %}
+                <span class="badge badge-inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="text-muted">{{ u.date_joined|date:"M d, Y" }}</td>
+            <td>
+              <div class="action-btns">
+                <a href="{% url 'dashboard_user_edit' u.pk %}" class="btn-action btn-action-edit">Edit</a>
+                {% if u != request.user %}
+                  <form method="post" action="{% url 'dashboard_user_delete' u.pk %}"
+                        onsubmit="return confirm('Delete {{ u.username }}? This cannot be undone.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-action-delete">Delete</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="empty-row">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Comments — MARLO Dashboard{% endblock %}
+{% block topbar_title %}Comments{% endblock %}
+
+{% block content %}
+<div class="dash-section">
+  <div class="section-header">
+    <h1 class="dash-heading">Comments</h1>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    {% for tab_status, tab_label in filter_options %}
+      <a href="?status={{ tab_status }}"
+         class="filter-tab {% if current_status == tab_status %}active{% endif %}">
+        {{ tab_label }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Post</th>
+          <th>Comment</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for comment in page_obj %}
+          <tr id="comment-row-{{ comment.pk }}">
+            <td>{{ comment.user.username }}</td>
+            <td>
+              <a href="{% url 'post_detail' comment.post.slug %}" target="_blank" class="table-link">
+                {{ comment.post.title|truncatechars:30 }}
+              </a>
+            </td>
+            <td class="comment-body-cell">{{ comment.body|truncatechars:80 }}</td>
+            <td>
+              {% if comment.status == 'approved' %}
+                <span class="badge badge-active">Approved</span>
+              {% elif comment.status == 'blocked' %}
+                <span class="badge badge-inactive">Blocked</span>
+              {% else %}
+                <span class="badge badge-draft">Pending</span>
+              {% endif %}
+            </td>
+            <td class="text-muted">{{ comment.created_at|date:"M d, Y" }}</td>
+            <td>
+              <div class="action-btns">
+                {% if comment.status != 'approved' %}
+                  <form method="post" action="{% url 'dashboard_comment_moderate' comment.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve" />
+                    <input type="hidden" name="next" value="dashboard_comment_list" />
+                    <button type="submit" class="btn-action btn-action-approve">Approve</button>
+                  </form>
+                {% endif %}
+                {% if comment.status != 'blocked' %}
+                  <form method="post" action="{% url 'dashboard_comment_moderate' comment.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="block" />
+                    <button type="submit" class="btn-action btn-action-block">Block</button>
+                  </form>
+                {% endif %}
+                <form method="post" action="{% url 'dashboard_comment_delete' comment.pk %}"
+                      onsubmit="return confirm('Delete this comment permanently?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-action btn-action-delete">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="empty-row">No {{ current_status }} comments.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav class="pagination-nav">
+      {% if page_obj.has_previous %}
+        <a href="?status={{ current_status }}&page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
+      {% endif %}
+      <span class="page-info">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?status={{ current_status }}&page={{ page_obj.next_page_number }}" class="page-btn">Next →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}
