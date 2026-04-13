@@ -14,15 +14,18 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.pyc
+staticfiles/
+*.sqlite3
+.DS_Store
 
 # =====================
 # VIRTUAL ENV
 # =====================
 
-venv/
-env/
-ENV/
+
+myenv/
+
 
 
 # =====================

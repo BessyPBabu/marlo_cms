@@ -1,5 +1,5 @@
 [build]
-buildCommand = "/app/.venv/bin/pip install -r requirements.txt && /app/.venv/bin/python manage.py collectstatic --no-input && /app/.venv/bin/python manage.py migrate"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "/app/.venv/bin/gunicorn marlo_cms.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+startCommand = "python manage.py migrate && gunicorn marlo_cms.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
