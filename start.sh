@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+echo "=== Running migrations ==="
+python manage.py migrate --no-input
+
+echo "=== Starting gunicorn ==="
+exec gunicorn marlo_cms.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
