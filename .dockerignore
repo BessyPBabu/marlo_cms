@@ -1,0 +1,9 @@
+myenv/
+.env
+__pycache__/
+*.pyc
+*.pyo
+.git/
+staticfiles/
+*.sqlite3
+.DS_Store
