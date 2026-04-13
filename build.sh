@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -o errexit
 
-# Use the venv Python that Railway creates at /app/.venv
-export PATH="/app/.venv/bin:$PATH"
+# Activate the venv Railway creates — packages are installed here
+source /app/.venv/bin/activate
 
-pip install -r requirements.txt
+# No need to pip install — Railway already did it above
 python manage.py collectstatic --no-input
 python manage.py migrate
