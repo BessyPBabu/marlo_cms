@@ -9,7 +9,7 @@ A full-stack Content Management System built with Django 5, PostgreSQL, Django T
 - **Database**: PostgreSQL 16
 - **Auth**: Session auth (templates) + JWT (API / AJAX)
 - **Media**: Cloudinary
-- **Frontend**: Django Templates + Vanilla JS
+- **Frontend**: Django Templates
 - **Deployment**: Render (backend + DB) | Cloudinary (media)
 
 ---
