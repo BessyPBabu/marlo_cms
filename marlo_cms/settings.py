@@ -34,14 +34,24 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'unsafe-dev-key-change-before-deploy')
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+_raw_hosts = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(',') if h.strip()]
 
-CSRF_TRUSTED_ORIGINS = os.environ.get(
+# CSRF_TRUSTED_ORIGINS = os.environ.get(
+#     'CSRF_TRUSTED_ORIGINS',
+#     'http://localhost:8000'
+# ).split(',')
+
+_raw_csrf = os.environ.get(
     'CSRF_TRUSTED_ORIGINS',
-    'http://localhost:8000'
-).split(',')
+    'http://localhost:8000,http://127.0.0.1:8000',
+)
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _raw_csrf.split(',') if o.strip()]
 
-
+for _origin in CSRF_TRUSTED_ORIGINS:
+    _host = _origin.replace('https://', '').replace('http://', '').rstrip('/')
+    if _host and _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
 
 
 # Application definition
@@ -201,10 +211,25 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS — needed for JS fetch() calls from the same-origin templates
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    'CORS_ALLOWED_ORIGINS', 'http://localhost:8000'
-).split(',')
+# # CORS — needed for JS fetch() calls from the same-origin templates
+# CORS_ALLOWED_ORIGINS = os.environ.get(
+#     'CORS_ALLOWED_ORIGINS', 'http://localhost:8000'
+# ).split(',')
+# CORS_ALLOW_CREDENTIALS = True
+
+# ── CORS ──────────────────────────────────────────────────────
+# Must include full origins with scheme.
+_raw_cors = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:8000,http://127.0.0.1:8000',
+)
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _raw_cors.split(',') if o.strip()]
+ 
+# Also allow the same origins that are in CSRF_TRUSTED_ORIGINS
+for _origin in CSRF_TRUSTED_ORIGINS:
+    if _origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(_origin)
+ 
 CORS_ALLOW_CREDENTIALS = True
 
 LOGIN_URL = '/login/'
@@ -240,6 +265,12 @@ LOGGING = {
         'apps': {
             'handlers': ['console'],
             'level': 'INFO',
+            'propagate': False,
+        },
+         'django.security.csrf': {
+            # Promote CSRF warnings to ERROR so they appear in Railway logs clearly
+            'handlers': ['console'],
+            'level': 'ERROR',
             'propagate': False,
         },
     },
