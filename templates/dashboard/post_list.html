@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="dash-section">
+
   <div class="section-header">
     <h1 class="dash-heading">Posts</h1>
     <a href="{% url 'dashboard_post_create' %}" class="btn btn-primary">+ New post</a>
@@ -39,9 +40,9 @@
                 <span class="badge badge-draft">Draft</span>
               {% endif %}
             </td>
-            <td>{{ post.read_count }}</td>
-            <td>{{ post.like_count }}</td>
-            <td>{{ post.comment_count }}</td>
+            <td class="text-muted">{{ post.read_count }}</td>
+            <td class="text-muted">{{ post.like_count }}</td>
+            <td class="text-muted">{{ post.comment_count }}</td>
             <td class="text-muted">{{ post.created_at|date:"M d, Y" }}</td>
             <td>
               <div class="action-btns">
@@ -55,14 +56,18 @@
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="8" class="empty-row">No posts yet. <a href="{% url 'dashboard_post_create' %}">Create the first one.</a></td></tr>
+          <tr>
+            <td colspan="8" class="empty-row">
+              No posts yet. <a href="{% url 'dashboard_post_create' %}" style="color:var(--sky-400);">Create the first one.</a>
+            </td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 
   {% if page_obj.has_other_pages %}
-    <nav class="pagination-nav">
+    <nav class="pagination-nav" aria-label="Posts pagination">
       {% if page_obj.has_previous %}
         <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
       {% endif %}
@@ -72,5 +77,6 @@
       {% endif %}
     </nav>
   {% endif %}
+
 </div>
 {% endblock %}

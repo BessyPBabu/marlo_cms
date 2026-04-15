@@ -24,9 +24,7 @@ def _get_jwt(user):
         return ''
 
 
-# ──────────────────────────────────────────────────────
-# Public views
-# ──────────────────────────────────────────────────────
+# ── Public views ──────────────────────────────────────────────
 
 def post_list(request):
     try:
@@ -34,9 +32,11 @@ def post_list(request):
     except Exception:
         logger.exception("Error fetching published posts")
         posts = Post.objects.none()
+        messages.error(request, "Could not load posts right now. Please try again later.")
 
     paginator = Paginator(posts, 9)
     page_number = request.GET.get('page', 1)
+
     try:
         page_obj = paginator.page(page_number)
     except (EmptyPage, PageNotAnInteger):
@@ -52,13 +52,14 @@ def post_list(request):
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status='published')
 
-    # Track reads — skip bots and repeated visits in same session
+    # Track reads — skip repeated visits in the same browser session
     session_key = f'read_post_{post.pk}'
     if not request.session.get(session_key):
         post.increment_read_count()
         request.session[session_key] = True
 
     approved_comments = post.comments.filter(status='approved').select_related('user')
+
     liked = False
     if request.user.is_authenticated:
         liked = post.likes.filter(user=request.user).exists()
@@ -76,16 +77,14 @@ def about(request):
     return render(request, 'about.html')
 
 
-# ──────────────────────────────────────────────────────
-# Admin dashboard — post management
-# ──────────────────────────────────────────────────────
+# ── Admin dashboard — post management ────────────────────────
 
 @admin_required
 def dashboard_post_list(request):
     try:
         posts = Post.objects.select_related('author').order_by('-created_at')
     except Exception:
-        logger.exception("Error fetching admin post list")
+        logger.exception("Error fetching admin post list for user %s", request.user.pk)
         posts = Post.objects.none()
         messages.error(request, "Could not load posts.")
 
@@ -108,23 +107,28 @@ def dashboard_post_create(request):
                     post.published_at = timezone.now()
                 post.save()
 
-                # Handle multiple attachments
-                for f in request.FILES.getlist('attachments'):
+                attachment_files = request.FILES.getlist('attachments')
+                for f in attachment_files:
                     Attachment.objects.create(
                         post=post,
                         file=f,
                         file_name=f.name,
                         file_type=f.content_type,
                     )
+                if attachment_files:
+                    logger.info("%d attachment(s) saved for post %s", len(attachment_files), post.pk)
 
-                messages.success(request, f"Post '{post.title}' created.")
-                logger.info("Post created: %s (id=%s)", post.title, post.pk)
+                logger.info("Post created: '%s' (id=%s) by user %s", post.title, post.pk, request.user.pk)
+                messages.success(request, f"Post '{post.title}' created successfully.")
                 return redirect('dashboard_post_list')
             except Exception:
-                logger.exception("Error creating post")
-                messages.error(request, "Could not save post.")
+                logger.exception("Error creating post by admin %s", request.user.pk)
+                messages.error(request, "Could not save post. Please try again.")
         else:
-            messages.error(request, "Please fix the errors below.")
+            first_error = next(
+                (err for errors in post_form.errors.values() for err in errors), None
+            )
+            messages.error(request, first_error or "Please fix the errors below.")
 
     return render(request, 'dashboard/post_form.html', {
         'post_form': post_form,
@@ -143,7 +147,6 @@ def dashboard_post_edit(request, post_id):
         if post_form.is_valid():
             try:
                 updated = post_form.save(commit=False)
-                # Set published_at only on first publish
                 if updated.status == 'published' and not post.published_at:
                     updated.published_at = timezone.now()
                 updated.save()
@@ -156,14 +159,17 @@ def dashboard_post_edit(request, post_id):
                         file_type=f.content_type,
                     )
 
-                messages.success(request, "Post updated.")
-                logger.info("Post updated: %s (id=%s)", post.title, post.pk)
+                logger.info("Post updated: '%s' (id=%s) by user %s", post.title, post.pk, request.user.pk)
+                messages.success(request, f"Post '{post.title}' updated.")
                 return redirect('dashboard_post_list')
             except Exception:
-                logger.exception("Error updating post %s", post_id)
-                messages.error(request, "Could not update post.")
+                logger.exception("Error updating post %s by admin %s", post_id, request.user.pk)
+                messages.error(request, "Could not update post. Please try again.")
         else:
-            messages.error(request, "Please fix the errors below.")
+            first_error = next(
+                (err for errors in post_form.errors.values() for err in errors), None
+            )
+            messages.error(request, first_error or "Please fix the errors below.")
 
     return render(request, 'dashboard/post_form.html', {
         'post_form': post_form,
@@ -180,10 +186,10 @@ def dashboard_post_delete(request, post_id):
     try:
         title = post.title
         post.delete()
+        logger.info("Post deleted: '%s' (id=%s) by user %s", title, post_id, request.user.pk)
         messages.success(request, f"Post '{title}' deleted.")
-        logger.info("Post deleted: %s", title)
     except Exception:
-        logger.exception("Error deleting post %s", post_id)
+        logger.exception("Error deleting post %s by admin %s", post_id, request.user.pk)
         messages.error(request, "Could not delete post.")
     return redirect('dashboard_post_list')
 
@@ -194,9 +200,11 @@ def dashboard_attachment_delete(request, attachment_id):
     attachment = get_object_or_404(Attachment, pk=attachment_id)
     post_id = attachment.post_id
     try:
+        name = attachment.file_name
         attachment.delete()
-        messages.success(request, "Attachment deleted.")
+        logger.info("Attachment '%s' (id=%s) deleted by user %s", name, attachment_id, request.user.pk)
+        messages.success(request, f"Attachment '{name}' removed.")
     except Exception:
-        logger.exception("Error deleting attachment %s", attachment_id)
+        logger.exception("Error deleting attachment %s by admin %s", attachment_id, request.user.pk)
         messages.error(request, "Could not delete attachment.")
     return redirect('dashboard_post_edit', post_id=post_id)

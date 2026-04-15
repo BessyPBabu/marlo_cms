@@ -10,7 +10,8 @@
 </head>
 <body>
 
-  <!-- Navbar -->
+  <div id="toast-container"></div>
+
   <nav class="navbar">
     <div class="container navbar-inner">
       <a href="{% url 'post_list' %}" class="navbar-brand">MARLO</a>
@@ -42,24 +43,21 @@
     </div>
   </nav>
 
-  <!-- Flash messages -->
   {% if messages %}
-    <div class="messages-container container">
+    <div class="messages-container container" aria-live="polite">
       {% for message in messages %}
         <div class="alert alert-{{ message.tags }}">
-          {{ message }}
-          <button class="alert-close" onclick="this.parentElement.remove()">&#x2715;</button>
+          <span class="alert-msg">{{ message }}</span>
+          <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Dismiss">&#x2715;</button>
         </div>
       {% endfor %}
     </div>
   {% endif %}
 
-  <!-- Main content -->
   <main class="main-content">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
     <div class="container footer-inner">
       <span>&copy; {% now "Y" %} MARLO CMS. Built with Django.</span>
@@ -70,17 +68,18 @@
     </div>
   </footer>
 
-  <!-- JWT token for JS fetch calls — only rendered when user is logged in -->
+  {# JWT token for AJAX calls. String values only — no raw model fields injected. #}
   {% if user.is_authenticated and jwt_token %}
     <script>
       window.MARLO = {
-        jwtToken: "{{ jwt_token }}",
-        userId: {{ user.pk }},
+        jwtToken:  "{{ jwt_token|escapejs }}",
         csrfToken: "{{ csrf_token }}"
       };
     </script>
   {% else %}
-    <script>window.MARLO = { jwtToken: null, csrfToken: "{{ csrf_token }}" };</script>
+    <script>
+      window.MARLO = { jwtToken: null, csrfToken: "{{ csrf_token }}" };
+    </script>
   {% endif %}
 
   <script src="{% static 'js/main.js' %}"></script>

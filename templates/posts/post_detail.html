@@ -18,7 +18,9 @@
           {% endif %}
           <span class="post-author">{{ post.author.get_full_name|default:post.author.username }}</span>
           <span class="post-dot">·</span>
-          <span class="post-date">{{ post.published_at|date:"F d, Y"|default:post.created_at|date:"F d, Y" }}</span>
+          <span class="post-date">
+            {{ post.published_at|date:"F d, Y"|default:post.created_at|date:"F d, Y" }}
+          </span>
         </div>
 
         <h1 class="post-detail-title">{{ post.title }}</h1>
@@ -26,17 +28,19 @@
         <!-- Engagement bar -->
         <div class="engagement-bar">
           <span class="stat-item">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span id="read-count">{{ post.read_count }}</span> reads
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span id="read-count">{{ post.read_count }}</span>&nbsp;reads
           </span>
 
-          <!-- Like button -->
           {% if user.is_authenticated %}
             <button
               id="like-btn"
               class="like-btn {% if liked %}liked{% endif %}"
               data-slug="{{ post.slug }}"
-              aria-label="Like this post"
+              aria-label="{% if liked %}Unlike this post{% else %}Like this post{% endif %}"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
                 fill="{% if liked %}currentColor{% else %}none{% endif %}" id="like-icon">
@@ -47,14 +51,18 @@
             </button>
           {% else %}
             <a href="{% url 'login' %}?next={{ request.path }}" class="like-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
               {{ post.like_count }} Likes
             </a>
           {% endif %}
 
           <span class="stat-item">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            {{ post.comment_count }} comments
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            {{ post.comment_count }}&nbsp;comments
           </span>
         </div>
       </header>
@@ -62,7 +70,7 @@
       <!-- Cover image -->
       {% if post.cover_image %}
         <figure class="post-cover">
-          <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" />
+          <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" loading="lazy" />
         </figure>
       {% endif %}
 
@@ -78,7 +86,9 @@
           <ul class="attachment-list">
             {% for attachment in post.attachments.all %}
               <li class="attachment-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
                 <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment.file_name }}</a>
               </li>
             {% endfor %}
@@ -99,7 +109,7 @@
           <div class="comment-form-wrap">
             <div class="comment-author-avatar">
               {% if user.avatar %}
-                <img src="{{ user.avatar.url }}" alt="{{ user.username }}" />
+                <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="author-avatar-sm" />
               {% else %}
                 <div class="author-avatar-placeholder-sm">{{ user.username|first|upper }}</div>
               {% endif %}
@@ -109,30 +119,35 @@
                 id="comment-input"
                 class="form-control"
                 rows="3"
-                placeholder="Share your thoughts..."
+                placeholder="Share your thoughts… (Ctrl+Enter to post)"
                 data-slug="{{ post.slug }}"
+                maxlength="2000"
               ></textarea>
               <div class="comment-form-actions">
-                <button id="comment-submit" class="btn btn-primary btn-sm" data-slug="{{ post.slug }}">
+                <button
+                  id="comment-submit"
+                  class="btn btn-primary btn-sm"
+                  data-slug="{{ post.slug }}"
+                >
                   Post comment
                 </button>
-                <span id="comment-status" class="comment-status-msg"></span>
+                <span id="comment-status" class="comment-status-msg" aria-live="polite"></span>
               </div>
             </div>
           </div>
         {% else %}
           <div class="comment-login-prompt">
-            <a href="{% url 'login' %}?next={{ request.path }}#comments">Login to leave a comment</a>
+            <a href="{% url 'login' %}?next={{ request.path }}#comments">Log in to leave a comment</a>
           </div>
         {% endif %}
 
-        <!-- Existing comments -->
+        <!-- Existing approved comments -->
         <div class="comments-list" id="comments-list">
           {% for comment in comments %}
             <div class="comment-item" id="comment-{{ comment.pk }}">
               <div class="comment-avatar">
                 {% if comment.user.avatar %}
-                  <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.username }}" />
+                  <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.username }}" class="author-avatar-sm" />
                 {% else %}
                   <div class="author-avatar-placeholder-sm">{{ comment.user.username|first|upper }}</div>
                 {% endif %}
@@ -146,7 +161,9 @@
               </div>
             </div>
           {% empty %}
-            <p class="no-comments" id="no-comments-msg">No comments yet. Be the first to share your thoughts!</p>
+            <p class="no-comments" id="no-comments-msg">
+              No comments yet — be the first to share your thoughts!
+            </p>
           {% endfor %}
         </div>
       </section>

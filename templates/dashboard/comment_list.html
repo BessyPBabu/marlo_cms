@@ -4,11 +4,12 @@
 
 {% block content %}
 <div class="dash-section">
+
   <div class="section-header">
     <h1 class="dash-heading">Comments</h1>
   </div>
 
-  <!-- Filter tabs -->
+  <!-- Status filter tabs -->
   <div class="filter-tabs">
     {% for tab_status, tab_label in filter_options %}
       <a href="?status={{ tab_status }}"
@@ -52,6 +53,7 @@
             <td class="text-muted">{{ comment.created_at|date:"M d, Y" }}</td>
             <td>
               <div class="action-btns">
+
                 {% if comment.status != 'approved' %}
                   <form method="post" action="{% url 'dashboard_comment_moderate' comment.pk %}">
                     {% csrf_token %}
@@ -60,6 +62,7 @@
                     <button type="submit" class="btn-action btn-action-approve">Approve</button>
                   </form>
                 {% endif %}
+
                 {% if comment.status != 'blocked' %}
                   <form method="post" action="{% url 'dashboard_comment_moderate' comment.pk %}">
                     {% csrf_token %}
@@ -67,23 +70,27 @@
                     <button type="submit" class="btn-action btn-action-block">Block</button>
                   </form>
                 {% endif %}
+
                 <form method="post" action="{% url 'dashboard_comment_delete' comment.pk %}"
                       onsubmit="return confirm('Delete this comment permanently?')">
                   {% csrf_token %}
                   <button type="submit" class="btn-action btn-action-delete">Delete</button>
                 </form>
+
               </div>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="6" class="empty-row">No {{ current_status }} comments.</td></tr>
+          <tr>
+            <td colspan="6" class="empty-row">No {{ current_status }} comments.</td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 
   {% if page_obj.has_other_pages %}
-    <nav class="pagination-nav">
+    <nav class="pagination-nav" aria-label="Comments pagination">
       {% if page_obj.has_previous %}
         <a href="?status={{ current_status }}&page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
       {% endif %}
@@ -93,5 +100,6 @@
       {% endif %}
     </nav>
   {% endif %}
+
 </div>
 {% endblock %}

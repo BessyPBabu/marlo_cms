@@ -3,7 +3,6 @@
 
 {% block content %}
 
-<!-- Hero banner -->
 <section class="hero-banner">
   <div class="container">
     <h1 class="hero-title">Stories worth reading</h1>
@@ -17,6 +16,7 @@
     <div class="posts-grid">
       {% for post in page_obj %}
         <article class="post-card">
+
           {% if post.cover_image %}
             <a href="{% url 'post_detail' post.slug %}" class="post-card-img-wrap">
               <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="post-card-img" loading="lazy" />
@@ -42,28 +42,35 @@
             <div class="post-card-footer">
               <div class="post-stats">
                 <span class="stat-item">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
                   {{ post.read_count }}
                 </span>
                 <span class="stat-item">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
                   {{ post.like_count }}
                 </span>
                 <span class="stat-item">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
                   {{ post.comment_count }}
                 </span>
               </div>
               <a href="{% url 'post_detail' post.slug %}" class="read-more-link">Read more →</a>
             </div>
           </div>
+
         </article>
       {% endfor %}
     </div>
 
-    <!-- Pagination -->
     {% if page_obj.has_other_pages %}
-      <nav class="pagination-nav">
+      <nav class="pagination-nav" aria-label="Post pagination">
         {% if page_obj.has_previous %}
           <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">← Previous</a>
         {% endif %}

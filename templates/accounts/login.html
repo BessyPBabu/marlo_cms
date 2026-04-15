@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}Login — MARLO{% endblock %}
+{% block title %}Sign In — MARLO{% endblock %}
 
 {% block content %}
 <div class="auth-page">
   <div class="auth-card">
+
     <div class="auth-header">
       <div class="auth-logo">M</div>
       <h1 class="auth-title">Welcome back</h1>
@@ -21,9 +22,10 @@
           name="email"
           class="form-control"
           placeholder="you@example.com"
-          value="{{ request.POST.email }}"
+          value="{{ request.POST.email|default:'' }}"
           required
           autofocus
+          autocomplete="email"
         />
       </div>
 
@@ -36,14 +38,17 @@
           class="form-control"
           placeholder="Your password"
           required
+          autocomplete="current-password"
         />
       </div>
 
-      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:0.25rem;">
+        Sign in
+      </button>
     </form>
 
     <p class="auth-footer">
-      Don't have an account? <a href="{% url 'register' %}">Register here</a>
+      No account yet? <a href="{% url 'register' %}">Create one here</a>
     </p>
   </div>
 </div>

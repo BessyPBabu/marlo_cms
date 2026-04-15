@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}Profile — MARLO{% endblock %}
+{% block title %}My Profile — MARLO{% endblock %}
 
 {% block content %}
 <div class="container section">
+
   <div class="page-header">
     <h1 class="page-title">My Profile</h1>
   </div>
 
   <div class="profile-grid">
+
+    <!-- Sidebar: current info -->
     <div class="card profile-sidebar">
       <div class="profile-avatar-wrap">
         {% if user.avatar %}
@@ -22,38 +25,65 @@
       <p class="profile-joined">Member since {{ user.date_joined|date:"N Y" }}</p>
     </div>
 
+    <!-- Edit form -->
     <div class="card">
       <h2 class="card-title">Edit Profile</h2>
+
       <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
 
         <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text" name="username" class="form-control" value="{{ form.username.value|default:'' }}" />
-          {% if form.username.errors %}<span class="form-error">{{ form.username.errors|join:", " }}</span>{% endif %}
+          <label class="form-label" for="username">Username</label>
+          <input
+            type="text" id="username" name="username"
+            class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+            value="{{ form.username.value|default:'' }}"
+            autocomplete="username"
+          />
+          <span class="form-hint">Must start with a letter, 3–30 characters.</span>
+          {% if form.username.errors %}
+            <span class="form-error">{{ form.username.errors|join:", " }}</span>
+          {% endif %}
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">First name</label>
-            <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" />
+            <label class="form-label" for="first_name">First name</label>
+            <input
+              type="text" id="first_name" name="first_name"
+              class="form-control"
+              value="{{ form.first_name.value|default:'' }}"
+              autocomplete="given-name"
+            />
           </div>
           <div class="form-group">
-            <label class="form-label">Last name</label>
-            <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" />
+            <label class="form-label" for="last_name">Last name</label>
+            <input
+              type="text" id="last_name" name="last_name"
+              class="form-control"
+              value="{{ form.last_name.value|default:'' }}"
+              autocomplete="family-name"
+            />
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Bio</label>
-          <textarea name="bio" class="form-control" rows="4" placeholder="Tell us about yourself...">{{ form.bio.value|default:'' }}</textarea>
+          <label class="form-label" for="bio">Bio</label>
+          <textarea
+            id="bio" name="bio"
+            class="form-control" rows="4"
+            placeholder="Tell readers about yourself…"
+          >{{ form.bio.value|default:'' }}</textarea>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Profile picture</label>
-          <input type="file" name="avatar" class="form-control" accept="image/*" />
+          <label class="form-label" for="avatar">Profile picture</label>
+          <input type="file" id="avatar" name="avatar" class="form-control" accept="image/*" />
           {% if user.avatar %}
-            <p class="form-hint">Current: <a href="{{ user.avatar.url }}" target="_blank">View photo</a></p>
+            <p class="form-hint">
+              Current photo: <a href="{{ user.avatar.url }}" target="_blank" rel="noopener">view</a>
+              — upload a new one to replace it.
+            </p>
           {% endif %}
         </div>
 
@@ -63,6 +93,7 @@
         </div>
       </form>
     </div>
+
   </div>
 </div>
 {% endblock %}

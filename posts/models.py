@@ -40,13 +40,28 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.title)
+
+            # Safety: if title is all symbols and slugify returns empty string,
+            # fall back to a pk-based slug so we never hit an infinite loop
+            if not base_slug:
+                logger.warning(
+                    "Post title '%s' produced an empty slug — using fallback.",
+                    self.title,
+                )
+                base_slug = f"post-{self.pk or 'new'}"
+
             slug = base_slug
             counter = 1
-            # Ensure slug uniqueness
             while Post.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
+                if counter > 500:
+                    # Hard stop to prevent runaway loop
+                    logger.error("Slug uniqueness loop exceeded 500 iterations for '%s'", base_slug)
+                    break
+
             self.slug = slug
+
         try:
             super().save(*args, **kwargs)
         except Exception:

@@ -4,57 +4,71 @@
 
 {% block content %}
 <div class="dash-section">
+
   <div class="section-header">
     <h1 class="dash-heading">{{ action }} Post</h1>
     <a href="{% url 'dashboard_post_list' %}" class="btn btn-outline">← Back to posts</a>
   </div>
 
   <div class="post-form-grid">
-    <!-- Main form -->
+
+    <!-- Main editor -->
     <div class="form-card">
       <form method="post" enctype="multipart/form-data" novalidate id="post-form">
         {% csrf_token %}
 
         <div class="form-group">
-          <label class="form-label">Title *</label>
-          <input type="text" name="title"
+          <label class="form-label">Title <span style="color:var(--red)">*</span></label>
+          <input
+            type="text" name="title"
             class="form-control form-title-input {% if post_form.title.errors %}is-invalid{% endif %}"
             value="{{ post_form.title.value|default:'' }}"
-            placeholder="Post title..." />
+            placeholder="Post title…"
+          />
+          <span class="form-hint">Min 5 characters. Must contain letters or numbers (not only symbols).</span>
           {% if post_form.title.errors %}
             <span class="form-error">{{ post_form.title.errors|join:", " }}</span>
           {% endif %}
         </div>
 
         <div class="form-group">
-          <label class="form-label">Content *</label>
-          <textarea name="content"
+          <label class="form-label">Content <span style="color:var(--red)">*</span></label>
+          <textarea
+            name="content"
             class="form-control post-editor {% if post_form.content.errors %}is-invalid{% endif %}"
             rows="18"
-            placeholder="Write your post content here...">{{ post_form.content.value|default:'' }}</textarea>
+            placeholder="Write your post content here…"
+          >{{ post_form.content.value|default:'' }}</textarea>
           {% if post_form.content.errors %}
             <span class="form-error">{{ post_form.content.errors|join:", " }}</span>
           {% endif %}
         </div>
 
-        <!-- Attachments -->
+        <!-- Attachments upload -->
         <div class="form-group">
           <label class="form-label">Upload attachments</label>
-          <input type="file" name="attachments" class="form-control" multiple accept="image/*,.pdf,.doc,.docx,.zip" />
-          <span class="form-hint">Max 20 MB per file. Multiple files supported.</span>
+          <input
+            type="file" name="attachments"
+            class="form-control" multiple
+            accept="image/*,.pdf,.doc,.docx,.zip,.txt"
+          />
+          <span class="form-hint">Max 20 MB per file. Allowed: images, PDF, Word, ZIP, plain text.</span>
         </div>
 
+        <!-- Existing attachments (edit mode) -->
         {% if post and post.attachments.all %}
           <div class="existing-attachments">
             <label class="form-label">Current attachments</label>
             <ul class="attachment-list">
               {% for att in post.attachments.all %}
                 <li class="attachment-item attachment-item-dash">
-                  <a href="{{ att.file.url }}" target="_blank">{{ att.file_name }}</a>
+                  <a href="{{ att.file.url }}" target="_blank" rel="noopener">{{ att.file_name }}</a>
                   <form method="post" action="{% url 'dashboard_attachment_delete' att.pk %}" style="display:inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn-link-danger"
-                      onclick="return confirm('Remove this attachment?')">Remove</button>
+                    <button
+                      type="submit" class="btn-link-danger"
+                      onclick="return confirm('Remove this attachment?')"
+                    >Remove</button>
                   </form>
                 </li>
               {% endfor %}
@@ -69,7 +83,7 @@
       </form>
     </div>
 
-    <!-- Sidebar options -->
+    <!-- Sidebar: publish settings -->
     <div>
       <div class="form-card sidebar-form-card">
         <h3 class="card-title">Publish settings</h3>
@@ -78,8 +92,9 @@
           <label class="form-label">Status</label>
           <select name="status" form="post-form" class="form-control">
             {% for value, label in post_form.fields.status.choices %}
-              <option value="{{ value }}"
-                {% if post_form.status.value == value %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ value }}" {% if post_form.status.value == value %}selected{% endif %}>
+                {{ label }}
+              </option>
             {% endfor %}
           </select>
         </div>
@@ -90,7 +105,7 @@
           {% if post and post.cover_image %}
             <div class="current-cover">
               <img src="{{ post.cover_image.url }}" alt="Current cover" />
-              <span class="form-hint">Upload a new image to replace.</span>
+              <span class="form-hint">Upload a new image to replace the current one.</span>
             </div>
           {% endif %}
         </div>
@@ -102,12 +117,14 @@
             <p><span class="meta-label">Likes:</span> {{ post.like_count }}</p>
             <p><span class="meta-label">Created:</span> {{ post.created_at|date:"M d, Y" }}</p>
           </div>
-          <a href="{% url 'post_detail' post.slug %}" target="_blank" class="btn btn-outline btn-block">
+          <a href="{% url 'post_detail' post.slug %}" target="_blank" class="btn btn-outline btn-block" style="margin-top:0.5rem;">
             Preview post →
           </a>
         {% endif %}
+
       </div>
     </div>
+
   </div>
 </div>
 {% endblock %}
