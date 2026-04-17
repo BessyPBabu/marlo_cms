@@ -10,7 +10,7 @@
     <a href="{% url 'dashboard_user_list' %}" class="btn btn-outline">← Back to users</a>
   </div>
 
-  <div class="form-card" style="max-width: 680px;">
+  <div class="form-card" style="max-width:680px;">
     <form method="post" novalidate>
       {% csrf_token %}
 
@@ -20,74 +20,144 @@
         </div>
       {% endif %}
 
+      <!-- Username + Email row -->
       <div class="form-row">
+
         <div class="form-group">
-          <label class="form-label">Username <span style="color:var(--red)">*</span></label>
+          <label class="form-label" for="id_username">
+            Username <span style="color:var(--red)">*</span>
+          </label>
           <input
-            type="text" name="username"
+            type="text"
+            id="id_username"
+            name="username"
             class="form-control {% if form.username.errors %}is-invalid{% endif %}"
             value="{{ form.username.value|default:'' }}"
             autocomplete="off"
+            spellcheck="false"
           />
+          <!-- Always show the rule as a hint -->
+          <span class="form-hint">
+            Must start with a letter · 3–30 characters · letters, numbers, - and _ only
+          </span>
+          <!-- Show the specific error if validation failed -->
           {% if form.username.errors %}
-            <span class="form-error">{{ form.username.errors|join:", " }}</span>
+            <span class="form-error">{{ form.username.errors|join:" " }}</span>
           {% endif %}
         </div>
+
         <div class="form-group">
-          <label class="form-label">Email <span style="color:var(--red)">*</span></label>
+          <label class="form-label" for="id_email">
+            Email <span style="color:var(--red)">*</span>
+          </label>
           <input
-            type="email" name="email"
+            type="email"
+            id="id_email"
+            name="email"
             class="form-control {% if form.email.errors %}is-invalid{% endif %}"
             value="{{ form.email.value|default:'' }}"
             autocomplete="off"
           />
           {% if form.email.errors %}
-            <span class="form-error">{{ form.email.errors|join:", " }}</span>
+            <span class="form-error">{{ form.email.errors|join:" " }}</span>
           {% endif %}
         </div>
+
       </div>
 
+      <!-- First name + Last name row -->
       <div class="form-row">
+
         <div class="form-group">
-          <label class="form-label">First name</label>
-          <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" />
+          <label class="form-label" for="id_first_name">First name</label>
+          <input
+            type="text"
+            id="id_first_name"
+            name="first_name"
+            class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
+            value="{{ form.first_name.value|default:'' }}"
+            autocomplete="given-name"
+          />
+          {% if form.first_name.errors %}
+            <span class="form-error">{{ form.first_name.errors|join:" " }}</span>
+          {% endif %}
         </div>
+
         <div class="form-group">
-          <label class="form-label">Last name</label>
-          <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" />
+          <label class="form-label" for="id_last_name">Last name</label>
+          <input
+            type="text"
+            id="id_last_name"
+            name="last_name"
+            class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
+            value="{{ form.last_name.value|default:'' }}"
+            autocomplete="family-name"
+          />
+          {% if form.last_name.errors %}
+            <span class="form-error">{{ form.last_name.errors|join:" " }}</span>
+          {% endif %}
         </div>
+
       </div>
 
+      <!-- Password (create only) -->
       {% if action == 'Create' %}
         <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" placeholder="Set initial password (min 8 chars)" />
-          <span class="form-hint">Leave blank to set an unusable password — user must reset via admin.</span>
+          <label class="form-label" for="id_password">Password</label>
+          <input
+            type="password"
+            id="id_password"
+            name="password"
+            class="form-control {% if password_error %}is-invalid{% endif %}"
+            placeholder="Min 8 characters"
+            autocomplete="new-password"
+          />
+          <span class="form-hint">Leave blank to set an unusable password — the user must reset it.</span>
+          {% if password_error %}
+            <span class="form-error">{{ password_error }}</span>
+          {% endif %}
         </div>
       {% endif %}
 
+      <!-- Role + Flags row -->
       <div class="form-row">
+
         <div class="form-group">
           <label class="form-label">Role</label>
           <select name="role" class="form-control">
             {% for value, label in form.fields.role.choices %}
-              <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>
+                {{ label }}
+              </option>
             {% endfor %}
           </select>
+          <span class="form-hint">
+            Setting Staff/Admin below automatically upgrades the role to Admin.
+          </span>
         </div>
+
         <div class="form-group">
           <label class="form-label">Flags</label>
-          <div class="checkbox-wrap">
+          <div class="checkbox-wrap" style="margin-top:6px;">
             <label class="checkbox-label">
-              <input type="checkbox" name="is_active" {% if form.is_active.value %}checked{% endif %} />
+              <input
+                type="checkbox"
+                name="is_active"
+                {% if form.is_active.value %}checked{% endif %}
+              />
               Active account
             </label>
             <label class="checkbox-label">
-              <input type="checkbox" name="is_staff" {% if form.is_staff.value %}checked{% endif %} />
+              <input
+                type="checkbox"
+                name="is_staff"
+                {% if form.is_staff.value %}checked{% endif %}
+              />
               Staff / Admin
             </label>
           </div>
         </div>
+
       </div>
 
       <div class="form-actions">

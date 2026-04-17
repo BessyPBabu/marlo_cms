@@ -10,6 +10,27 @@
     <a href="{% url 'dashboard_post_list' %}" class="btn btn-outline">← Back to posts</a>
   </div>
 
+  <!-- Global error summary — shows all errors at once so nothing is missed -->
+  {% if post_form.errors %}
+    <div class="alert alert-error" style="margin-bottom:1.25rem;">
+      <div>
+        <strong style="display:block;margin-bottom:4px;">Please fix the following before saving:</strong>
+        <ul style="margin:0;padding-left:1.2rem;">
+          {% for field, errors in post_form.errors.items %}
+            {% for error in errors %}
+              <li>
+                {% if field != '__all__' %}
+                  <strong>{{ field|capfirst }}:</strong>
+                {% endif %}
+                {{ error }}
+              </li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
   <div class="post-form-grid">
 
     <!-- Main editor -->
@@ -17,45 +38,63 @@
       <form method="post" enctype="multipart/form-data" novalidate id="post-form">
         {% csrf_token %}
 
+        <!-- Title -->
         <div class="form-group">
-          <label class="form-label">Title <span style="color:var(--red)">*</span></label>
+          <label class="form-label" for="id_title">
+            Title <span style="color:var(--red)">*</span>
+          </label>
           <input
-            type="text" name="title"
+            type="text"
+            id="id_title"
+            name="title"
             class="form-control form-title-input {% if post_form.title.errors %}is-invalid{% endif %}"
             value="{{ post_form.title.value|default:'' }}"
             placeholder="Post title…"
+            maxlength="255"
           />
-          <span class="form-hint">Min 5 characters. Must contain letters or numbers (not only symbols).</span>
+          <span class="form-hint">
+            5–255 characters · must contain at least one letter or number
+            (titles like ___, --- or !!! are not allowed)
+          </span>
           {% if post_form.title.errors %}
-            <span class="form-error">{{ post_form.title.errors|join:", " }}</span>
+            <span class="form-error">{{ post_form.title.errors|join:" " }}</span>
           {% endif %}
         </div>
 
+        <!-- Content -->
         <div class="form-group">
-          <label class="form-label">Content <span style="color:var(--red)">*</span></label>
+          <label class="form-label" for="id_content">
+            Content <span style="color:var(--red)">*</span>
+          </label>
           <textarea
+            id="id_content"
             name="content"
             class="form-control post-editor {% if post_form.content.errors %}is-invalid{% endif %}"
             rows="18"
             placeholder="Write your post content here…"
           >{{ post_form.content.value|default:'' }}</textarea>
+          <span class="form-hint">Minimum 10 characters.</span>
           {% if post_form.content.errors %}
-            <span class="form-error">{{ post_form.content.errors|join:", " }}</span>
+            <span class="form-error">{{ post_form.content.errors|join:" " }}</span>
           {% endif %}
         </div>
 
-        <!-- Attachments upload -->
+        <!-- Attachments -->
         <div class="form-group">
           <label class="form-label">Upload attachments</label>
           <input
-            type="file" name="attachments"
-            class="form-control" multiple
+            type="file"
+            name="attachments"
+            class="form-control"
+            multiple
             accept="image/*,.pdf,.doc,.docx,.zip,.txt"
           />
-          <span class="form-hint">Max 20 MB per file. Allowed: images, PDF, Word, ZIP, plain text.</span>
+          <span class="form-hint">
+            Max 20 MB per file · Allowed: images, PDF, Word, ZIP, plain text
+          </span>
         </div>
 
-        <!-- Existing attachments (edit mode) -->
+        <!-- Existing attachments (edit mode only) -->
         {% if post and post.attachments.all %}
           <div class="existing-attachments">
             <label class="form-label">Current attachments</label>
@@ -66,7 +105,8 @@
                   <form method="post" action="{% url 'dashboard_attachment_delete' att.pk %}" style="display:inline">
                     {% csrf_token %}
                     <button
-                      type="submit" class="btn-link-danger"
+                      type="submit"
+                      class="btn-link-danger"
                       onclick="return confirm('Remove this attachment?')"
                     >Remove</button>
                   </form>
@@ -92,18 +132,28 @@
           <label class="form-label">Status</label>
           <select name="status" form="post-form" class="form-control">
             {% for value, label in post_form.fields.status.choices %}
-              <option value="{{ value }}" {% if post_form.status.value == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+              <option
+                value="{{ value }}"
+                {% if post_form.status.value == value %}selected{% endif %}
+              >{{ label }}</option>
             {% endfor %}
           </select>
+          <span class="form-hint">
+            Draft posts are not publicly visible.
+          </span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Cover image</label>
-          <input type="file" name="cover_image" form="post-form" class="form-control" accept="image/*" />
+          <input
+            type="file"
+            name="cover_image"
+            form="post-form"
+            class="form-control"
+            accept="image/*"
+          />
           {% if post and post.cover_image %}
-            <div class="current-cover">
+            <div class="current-cover" style="margin-top:8px;">
               <img src="{{ post.cover_image.url }}" alt="Current cover" />
               <span class="form-hint">Upload a new image to replace the current one.</span>
             </div>
@@ -117,9 +167,12 @@
             <p><span class="meta-label">Likes:</span> {{ post.like_count }}</p>
             <p><span class="meta-label">Created:</span> {{ post.created_at|date:"M d, Y" }}</p>
           </div>
-          <a href="{% url 'post_detail' post.slug %}" target="_blank" class="btn btn-outline btn-block" style="margin-top:0.5rem;">
-            Preview post →
-          </a>
+          <a
+            href="{% url 'post_detail' post.slug %}"
+            target="_blank"
+            class="btn btn-outline btn-block"
+            style="margin-top:0.5rem;"
+          >Preview post →</a>
         {% endif %}
 
       </div>

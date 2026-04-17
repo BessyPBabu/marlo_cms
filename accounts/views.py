@@ -23,6 +23,16 @@ def _get_jwt_for_user(user):
         return ''
 
 
+def _first_form_error(form):
+    """Pull the first validation error out of a bound form for the flash message."""
+    for errors in form.errors.values():
+        for err in errors:
+            return err
+    return "Please fix the errors below."
+
+
+# ── Public views ──────────────────────────────────────────────
+
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('post_list')
@@ -38,18 +48,11 @@ def register_view(request):
                 messages.success(request, f"Welcome to MARLO, {user.first_name}! Your account is ready.")
                 return redirect('post_list')
             except Exception:
-                logger.exception("Unexpected error during registration for email: %s",
+                logger.exception("Unexpected error during registration for %s",
                                  form.cleaned_data.get('email', 'unknown'))
                 messages.error(request, "Registration failed due to a server error. Please try again.")
         else:
-            # Surface the first field error as a top-level message
-            first_error = next(
-                (err for errors in form.errors.values() for err in errors), None
-            )
-            if first_error:
-                messages.error(request, first_error)
-            else:
-                messages.error(request, "Please fix the errors below.")
+            messages.error(request, _first_form_error(form))
 
     return render(request, 'accounts/register.html', {'form': form})
 
@@ -59,14 +62,13 @@ def login_view(request):
         return redirect('post_list')
 
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip().lower()
+        email    = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
 
         if not email or not password:
             messages.error(request, "Both email and password are required.")
             return render(request, 'accounts/login.html')
 
-        # Validate email format before touching the DB
         try:
             validate_email(email)
         except ValidationError:
@@ -90,7 +92,6 @@ def login_view(request):
         messages.success(request, f"Welcome back, {user.first_name or user.username}!")
 
         next_url = request.GET.get('next', '/')
-        # Security: only redirect to relative paths
         if not next_url.startswith('/'):
             next_url = '/'
         return redirect(next_url)
@@ -126,16 +127,10 @@ def profile_view(request):
                 logger.exception("Error saving profile for user %s", request.user.pk)
                 messages.error(request, "Could not save your profile. Please try again.")
         else:
-            first_error = next(
-                (err for errors in form.errors.values() for err in errors), None
-            )
-            messages.error(request, first_error or "Please fix the errors below.")
+            messages.error(request, _first_form_error(form))
 
     jwt_token = _get_jwt_for_user(request.user)
-    return render(request, 'accounts/profile.html', {
-        'form': form,
-        'jwt_token': jwt_token,
-    })
+    return render(request, 'accounts/profile.html', {'form': form, 'jwt_token': jwt_token})
 
 
 # ── Admin guard decorator ─────────────────────────────────────
@@ -145,7 +140,7 @@ def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_admin_role:
             logger.warning(
-                "Non-admin user %s (id=%s) attempted to access admin view: %s",
+                "Non-admin user %s (id=%s) attempted to access %s",
                 request.user.email, request.user.pk, request.path,
             )
             messages.error(request, "Access denied — admin privileges required.")
@@ -164,17 +159,14 @@ def dashboard_home(request):
 
     try:
         context = {
-            'total_users': CustomUser.objects.count(),
-            'total_posts': Post.objects.count(),
-            'published_posts': Post.objects.filter(status='published').count(),
+            'total_users':      CustomUser.objects.count(),
+            'total_posts':      Post.objects.count(),
+            'published_posts':  Post.objects.filter(status='published').count(),
             'pending_comments': Comment.objects.filter(status='pending').count(),
         }
     except Exception:
         logger.exception("Error loading dashboard stats for user %s", request.user.pk)
-        context = {
-            'total_users': 0, 'total_posts': 0,
-            'published_posts': 0, 'pending_comments': 0,
-        }
+        context = {'total_users': 0, 'total_posts': 0, 'published_posts': 0, 'pending_comments': 0}
 
     context['jwt_token'] = _get_jwt_for_user(request.user)
     return render(request, 'dashboard/index.html', context)
@@ -194,16 +186,20 @@ def user_list(request):
 @admin_required
 def user_create(request):
     form = AdminUserForm(request.POST or None)
+    # We track a separate password error so we can highlight the field in the template
+    password_error = None
 
     if request.method == 'POST':
-        if form.is_valid():
+        raw_password = request.POST.get('password', '').strip()
+
+        # Validate password length before checking the rest of the form
+        if raw_password and len(raw_password) < 8:
+            password_error = "Password must be at least 8 characters."
+
+        if form.is_valid() and not password_error:
             try:
                 user = form.save(commit=False)
-                raw_password = request.POST.get('password', '').strip()
                 if raw_password:
-                    if len(raw_password) < 8:
-                        messages.error(request, "Password must be at least 8 characters.")
-                        return render(request, 'dashboard/user_form.html', {'form': form, 'action': 'Create'})
                     user.set_password(raw_password)
                 else:
                     user.set_unusable_password()
@@ -215,12 +211,16 @@ def user_create(request):
                 logger.exception("Error creating user by admin %s", request.user.pk)
                 messages.error(request, "Could not create user. Please try again.")
         else:
-            first_error = next(
-                (err for errors in form.errors.values() for err in errors), None
-            )
-            messages.error(request, first_error or "Please fix the errors below.")
+            if password_error:
+                messages.error(request, password_error)
+            elif not form.is_valid():
+                messages.error(request, _first_form_error(form))
 
-    return render(request, 'dashboard/user_form.html', {'form': form, 'action': 'Create'})
+    return render(request, 'dashboard/user_form.html', {
+        'form':           form,
+        'action':         'Create',
+        'password_error': password_error,
+    })
 
 
 @admin_required
@@ -239,14 +239,11 @@ def user_edit(request, user_id):
                 logger.exception("Error updating user %s by admin %s", user_id, request.user.pk)
                 messages.error(request, "Could not update user. Please try again.")
         else:
-            first_error = next(
-                (err for errors in form.errors.values() for err in errors), None
-            )
-            messages.error(request, first_error or "Please fix the errors below.")
+            messages.error(request, _first_form_error(form))
 
     return render(request, 'dashboard/user_form.html', {
-        'form': form,
-        'action': 'Edit',
+        'form':        form,
+        'action':      'Edit',
         'target_user': user,
     })
 
