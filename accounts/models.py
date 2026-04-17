@@ -7,12 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 class CustomUser(AbstractUser):
-    ROLE_GUEST = 'guest'
+    # ROLE_GUEST = 'guest'
     ROLE_USER = 'user'
     ROLE_ADMIN = 'admin'
 
     ROLE_CHOICES = [
-        (ROLE_GUEST, 'Guest'),
+        # (ROLE_GUEST, 'Guest'),
         (ROLE_USER, 'User'),
         (ROLE_ADMIN, 'Admin'),
     ]
