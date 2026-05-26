@@ -27,5 +27,14 @@ else:
         print(f"Superuser {email} created successfully.")
 EOF
 
+echo "=== Checking Django system ==="
+python manage.py check --deploy 2>&1 || true
+
 echo "=== Starting gunicorn ==="
-exec gunicorn marlo_cms.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+exec gunicorn marlo_cms.wsgi:application \
+    --bind 0.0.0.0:$PORT \
+    --workers 2 \
+    --timeout 120 \
+    --log-level debug \
+    --capture-output \
+    --enable-stdio-inheritance
