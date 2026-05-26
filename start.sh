@@ -37,4 +37,5 @@ exec gunicorn marlo_cms.wsgi:application \
     --timeout 120 \
     --log-level debug \
     --capture-output \
-    --enable-stdio-inheritance
+    --enable-stdio-inheritance \
+    --forwarded-allow-ips="*"
