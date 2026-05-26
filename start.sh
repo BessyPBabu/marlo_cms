@@ -28,7 +28,7 @@ else:
 EOF
 
 echo "=== Starting gunicorn ==="
-PORT="${PORT:-8000}"
+PORT="${PORT:-8080}"
 echo "Using PORT: $PORT"
 
 exec gunicorn marlo_cms.wsgi:application \
@@ -38,4 +38,7 @@ exec gunicorn marlo_cms.wsgi:application \
     --log-level debug \
     --capture-output \
     --enable-stdio-inheritance \
-    --forwarded-allow-ips="*"
+    --forwarded-allow-ips="*" \
+    --access-logfile="-" \
+    --error-logfile="-" \
+    --no-config
