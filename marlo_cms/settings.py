@@ -268,7 +268,7 @@ LOGGING = {
             'propagate': False,
         },
          'django.security.csrf': {
-            # Promote CSRF warnings to ERROR so they appear in Railway logs clearly
+            # Promote CSRF warnings to ERROR so they show clearly in Render logs
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,

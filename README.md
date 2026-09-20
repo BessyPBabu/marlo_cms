@@ -1,6 +1,6 @@
 # MARLO CMS
 
-Live Application: https://marlo-cms-production.up.railway.app/
+Live Application: 
 
 ---
 
@@ -8,7 +8,7 @@ Live Application: https://marlo-cms-production.up.railway.app/
 
 **MARLO CMS** is a production-ready Content Management System designed to allow users to publish, manage, and interact with blog content efficiently.
 
-The application is built using **Python Django** with **PostgreSQL** as the database. Media files are stored in **Cloudinary**, and the application is deployed using **Railway**, enabling a scalable and reliable production environment.
+The application is built using **Python Django** with **PostgreSQL** as the database. Media files are stored in **Cloudinary**, and the application is deployed using **Render**, enabling a scalable and reliable production environment.
 
 The system supports content publishing workflows, user engagement features, comment moderation, and administrator-level management capabilities.
 
@@ -55,7 +55,7 @@ The project focuses on modular architecture, API-driven design, authentication s
 
 ### Deployment
 
-* Railway (Application Hosting)
+* Render(Application Hosting)
 * Gunicorn
 
 ### Development Tools
@@ -161,7 +161,7 @@ PostgreSQL Database
 Cloudinary (Media Storage)
 │
 ▼
-Railway Deployment (Gunicorn Server)
+Render Deployment (Gunicorn Server)
 
 ---
 
