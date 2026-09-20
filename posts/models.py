@@ -1,5 +1,5 @@
 import logging
-
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
@@ -90,7 +90,7 @@ class Post(models.Model):
 
 class Attachment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='attachments')
-    file = models.FileField(upload_to='posts/attachments/')
+    file = models.FileField(upload_to='posts/attachments/', storage=RawMediaCloudinaryStorage())
     file_name = models.CharField(max_length=255)
     file_type = models.CharField(max_length=50, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)

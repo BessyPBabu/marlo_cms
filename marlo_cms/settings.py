@@ -48,6 +48,10 @@ _raw_csrf = os.environ.get(
 )
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _raw_csrf.split(',') if o.strip()]
 
+_render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if _render_host:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_render_host}')
+
 for _origin in CSRF_TRUSTED_ORIGINS:
     _host = _origin.replace('https://', '').replace('http://', '').rstrip('/')
     if _host and _host not in ALLOWED_HOSTS:
@@ -235,6 +239,11 @@ CORS_ALLOW_CREDENTIALS = True
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 LOGGING = {
     'version': 1,

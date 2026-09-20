@@ -1,5 +1,5 @@
 import logging
-
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -92,7 +92,7 @@ def login_view(request):
         messages.success(request, f"Welcome back, {user.first_name or user.username}!")
 
         next_url = request.GET.get('next', '/')
-        if not next_url.startswith('/'):
+        if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
             next_url = '/'
         return redirect(next_url)
 
